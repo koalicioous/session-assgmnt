@@ -1,26 +1,88 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 
+import Input from './components/Input';
+import Select from './components/Select';
+
+import { DUMMY_CATEGORIES } from './data';
+import SessionContextProvider from './context/SessionContext';
+
+import { SessionContext } from './context/SessionContext';
+import { useActor } from '@xstate/react';
+import List from './components/List';
+
+import { useKeyPress, useClickAway } from 'ahooks';
+
 function App() {
+  const sessionServices = React.useContext(SessionContext)
+  const [state, send] = useActor(sessionServices.sessionService)
+
+  const [titleValue, setTitleValue] = React.useState<string>('')
+  const [categoryValue, setCategoryValue] = React.useState<string | null>(null)
+
+  const [activeItem,setActiveItem] = React.useState<number | null>(null)
+
+  const listItemRef = React.useRef(null)
+  const inputRef = React.useRef(null)
+
+  useClickAway(() => {
+    if (state.value === 'idle') {
+      setActiveItem(null)
+    }
+  }, [listItemRef])
+
+  useKeyPress('uparrow', () => {
+    if (state.value === 'idle') {
+      setActiveItem((prev) => {
+        if (prev === null) return 0
+        return prev === 0 ? prev : prev - 1
+      })
+    }
+  })
+
+  useKeyPress('downarrow', () => {
+    if (state.value === 'idle') {
+      setActiveItem((prev) => {
+        if (prev === null) return 0
+        return prev === state.context.todos.length - 1 ? prev : prev + 1
+      })
+    }
+  })
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+      <section className='w-[500px] mx-auto bg-gray-100 p-4'>
+        <Select
+          value={categoryValue}
+          options={DUMMY_CATEGORIES}
+          onChange={setCategoryValue}
+        />
+        <div
+          ref={inputRef}
         >
-          Learn React
-        </a>
-      </header>
+          <Input
+            value={titleValue}
+            onChange={setTitleValue}
+            selectCategory={setCategoryValue}
+          />
+        </div>
+        <div ref={listItemRef} className="w-[280px] mx-auto">
+          <List
+            activeItem={activeItem}
+            setActiveItem={setActiveItem}
+          />
+        </div>
+      </section>
     </div>
   );
 }
 
-export default App;
+function AppWrapper() {
+  return (
+    <SessionContextProvider>
+      <App />
+    </SessionContextProvider>
+  )
+}
+
+export default AppWrapper;
