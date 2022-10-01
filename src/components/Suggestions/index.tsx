@@ -57,7 +57,15 @@ const Suggestions = ({
         if (state.value === 'typingTitle') {
             // immidiate insert
             if (state.context.tempSelectedSuggestion) {
-                onSelect(state.context.tempSelectedSuggestion)
+                // onSelect(state.context.tempSelectedSuggestion)
+                send({
+                    type: 'INSERT_DATA',
+                    value: {
+                        id: new Date().getTime(),
+                        name: state.context.tempSelectedSuggestion.name,
+                        category: state.context.category,
+                    }
+                })
             } else {
                 if (!!state.context.activity && !_.isEmpty(state.context.category)) {
                     send({

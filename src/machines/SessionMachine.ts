@@ -1,5 +1,5 @@
 import { assign, createMachine } from "xstate";
-import { DUMMY_LIST_ITEMS } from "../data";
+import { DUMMY_LIST_ITEMS, DUMMY_CATEGORIES } from "../data";
 import { Activity, Category, ListItem } from "../types";
 
 import { KEYBOARD_EVENTS, MOUSE_EVENTS } from '../userEvents';
@@ -10,11 +10,11 @@ const SessionMachine = createMachine({
     initial: "idle",
     context: {
         titleValue: '',
-        categoryValue: null as string | null,
+        categoryValue: DUMMY_CATEGORIES[0].id as string | null,
         todos: [
             ...DUMMY_LIST_ITEMS
         ] as ListItem[],
-        category: {} as Category,
+        category: DUMMY_CATEGORIES[0] as Category,
         activity: '',
         selectedIndex: null as null | number,
         tempSelectedSuggestion: null as Category | Activity | null,
