@@ -1,9 +1,11 @@
 import { useKeyPress } from "ahooks"
-import { ReactNode, useEffect, useState } from "react"
+import { ReactNode } from "react"
 import{ useActor } from '@xstate/react'
 import { useContext } from "react"
 import { SessionContext } from "../../context/SessionContext"
 import _ from 'lodash'
+import { KEYBOARD_EVENTS, MOUSE_EVENTS } from '../../userEvents'
+import { message } from 'antd'
 
 type SuggestionType = {
     options: any[]
@@ -16,34 +18,37 @@ const Suggestions = ({
     options,
     onSelect,
     render = (option) => <></>,
-    setTempSelected = null
 } : SuggestionType) => {
     const sessionServices = useContext(SessionContext)
     const [state,send] = useActor(sessionServices.sessionService)
-    const [selected, setSelected] = useState<number | null>(null)
+    const { selectedIndex: selected } = state.context
     
-    useKeyPress('uparrow', () => {
+    useKeyPress(KEYBOARD_EVENTS.ARROW_UP, () => {
         if (state.value !== 'idle') {
-            setSelected((prev) => {
-                if (prev === null) return 0
-                if (prev === 0) return prev
-                return prev - 1
+            send({
+                type: KEYBOARD_EVENTS.ARROW_UP,
+                value: {
+                    optionsLength: options.length,
+                    options
+                }
             })
         }
     })
 
-    useKeyPress('downarrow', () => {
+    useKeyPress(KEYBOARD_EVENTS.ARROW_DOWN, () => {
         if (state.value !== 'idle') {
-            setSelected((prev) => {
-                if (prev === null) return 0
-                if (prev === options.length - 1) return prev
-                return prev + 1
+            send({
+                type: KEYBOARD_EVENTS.ARROW_DOWN,
+                value: {
+                    optionsLength: options.length,
+                    options
+                }
             })
         }
     })
 
-    useKeyPress('enter', () => {
-        if (state.value !== 'idle') {
+    useKeyPress(KEYBOARD_EVENTS.ENTER, () => {
+        if (state.value === 'choosingCategory') {
             if (selected !==null) {
                 onSelect(options[selected])
                 send('TYPING_TITLE')
@@ -51,22 +56,46 @@ const Suggestions = ({
         }
         if (state.value === 'typingTitle') {
             // immidiate insert
-            if (!_.isEmpty(state.context.category)) {
+            if (state.context.tempSelectedSuggestion) {
+                onSelect(state.context.tempSelectedSuggestion)
+            } else {
+                if (!!state.context.activity && !_.isEmpty(state.context.category)) {
+                    send({
+                        type: 'INSERT_DATA',
+                        value: {
+                            id: new Date().getTime(),
+                            name: state.context.activity,
+                            category: state.context.category,
+                        }
+                    })
+                } else message.warning('Please insert title and select category')
+            }
+            if (!_.isEmpty(state.context.category && !state.context.tempSelectedSuggestion)) {
+                if (!!state.context.activity) {
+                    send({
+                        type: 'INSERT_DATA',
+                        value: {
+                            id: new Date().getTime(),
+                            name: state.context.activity,
+                            category: state.context.category,
+                        }
+                    })
+                }
+            }
+        }
+        if (state.value === 'typingCategory') {
+            // immidiate insert
+            if (state.context.tempSelectedSuggestion) {
                 send({
                     type: 'INSERT_DATA',
                     value: {
-                        id: new Date().getTime(),
                         name: state.context.activity,
-                        category: state.context.category,
+                        category: state.context.tempSelectedSuggestion,
                     }
                 })
-            }
+            } else message.warning('Please select a category')
         }
     })
-
-    useEffect(() => {
-        setSelected(null)
-    },[options.length])
     
     return (
         <div className="transition-all absolute w-full mt-1 max-h-[300px] overflow-y-auto shadow-md z-99">
@@ -76,14 +105,22 @@ const Suggestions = ({
                         key={option.id}
                         role="button"
                         onMouseEnter={() => {
-                            setSelected(idx)
-                            if (setTempSelected) {
-                                setTempSelected(option)
-                            }
+                            send({
+                                type: MOUSE_EVENTS.MOUSE_ENTER,
+                                value: {
+                                    index: idx,
+                                    tempSelected: option
+                                },
+                            })
                         }}
                         onMouseLeave={(() => {
-                            setSelected(null)
-                            if (setTempSelected) setTempSelected(null)
+                            send({
+                                type: MOUSE_EVENTS.MOUSE_LEAVE,
+                                value: {
+                                    index: null,
+                                    tempSelected: null,
+                                }
+                            })
                         })}
                         onClick={() => {
                             onSelect(option)

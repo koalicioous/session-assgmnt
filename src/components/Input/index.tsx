@@ -1,15 +1,15 @@
-import { useEffect, useRef, useContext, useState } from "react";
+import { useEffect, useRef, useContext } from "react";
 import { SessionContext } from "../../context/SessionContext"
 import { ACTIVITY_SUGGESTIONS, DUMMY_CATEGORIES } from "../../data";
 import { parseInput } from "../../helpers";
 import Suggestions from "../Suggestions";
-import { Activity, Category } from '../../types';
+import { Category } from '../../types';
 import{ useActor } from '@xstate/react'
 
 type InputProps = {
+    id: string,
     value: string,
     onChange: (value: string) => void,
-    selectCategory: (category: string) => void,
 }
 
 const renderCategory = (option: Category) => {
@@ -37,6 +37,7 @@ const renderActivities = (option: { id: string, name: string}) => {
 }
 
 const Input = ({
+    id,
     value,
     onChange,
 } : InputProps) => {
@@ -44,10 +45,10 @@ const Input = ({
     const inputRef = useRef<HTMLInputElement>(null)
     const sessionServices = useContext(SessionContext)
     const [state, send] = useActor(sessionServices.sessionService)
-    const [tempSelected, setTempSelected] = useState<Category | Activity | null>(null)
     const containerRef = useRef<HTMLDivElement>(null)
 
     const { title, category } = parseInput(value)
+    const { tempSelectedSuggestion } = state.context
 
     const handleSelectActivity = (option: { id: string, name: string}) => {
         onChange(option.name)
@@ -58,24 +59,31 @@ const Input = ({
     }
 
     const handleSelectCategory = (option: Category) => {
-        onChange('')
-        send({
-            type: 'INSERT_DATA',
-            value: {
-                name: title,
-                category: option,
+        if (tempSelectedSuggestion) {
+            if (inputRef.current) {
+                inputRef.current.blur()
             }
-        })
-        if (inputRef.current) {
-            inputRef.current.blur()
+            send({
+                type: 'INSERT_DATA',
+                value: {
+                    name: title,
+                    category: option,
+                }
+            })
+            onChange('')
         }
     }
 
+    // automatic focus
     useEffect(() => {
         if (state?.value === 'typingTitle') {
             if (inputRef.current) {
                 inputRef.current.focus()
-                onChange('')
+            }
+        }
+        if (state?.value === 'idle') {
+            if (inputRef.current) {
+                inputRef.current.blur()
             }
         }
     }, [state?.value, onChange])
@@ -91,12 +99,12 @@ const Input = ({
     },[category, send, state.value])
 
     const handleBlur = () => {
-        if (tempSelected === null) send('IDLE')
+        if (tempSelectedSuggestion === null) send('IDLE')
         else {
             if (state.value === 'typingTitle') {
                 if (inputRef.current) {
                     inputRef.current.focus()
-                    onChange(`${tempSelected.name}`)
+                    onChange(`${tempSelectedSuggestion.name}`)
                 }
             }
         }
@@ -138,7 +146,6 @@ const Input = ({
                                 handleSelectActivity :
                                 handleSelectCategory
                         }
-                        setTempSelected={setTempSelected}
                     />
                 )
             }

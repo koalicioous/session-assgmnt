@@ -12,42 +12,52 @@ import { useActor } from '@xstate/react';
 import List from './components/List';
 
 import { useKeyPress, useClickAway } from 'ahooks';
+import { KEYBOARD_EVENTS } from './userEvents';
 
 function App() {
   const sessionServices = React.useContext(SessionContext)
   const [state, send] = useActor(sessionServices.sessionService)
 
-  const [titleValue, setTitleValue] = React.useState<string>('')
-  const [categoryValue, setCategoryValue] = React.useState<string | null>(null)
-
-  const [activeItem,setActiveItem] = React.useState<number | null>(null)
-
   const listItemRef = React.useRef(null)
   const inputRef = React.useRef(null)
 
+  const { titleValue, categoryValue, activeItem } = state.context
+
+  const handleSetActiveItem = (index: number | null) => {
+    send({
+      type:'SET_ACTIVE_ITEM',
+      value: index
+    })
+  }
+
   useClickAway(() => {
     if (state.value === 'idle') {
-      setActiveItem(null)
+      handleSetActiveItem(null)
     }
   }, [listItemRef])
 
-  useKeyPress('uparrow', () => {
+  useKeyPress(KEYBOARD_EVENTS.ARROW_UP, () => {
     if (state.value === 'idle') {
-      setActiveItem((prev) => {
-        if (prev === null) return 0
-        return prev === 0 ? prev : prev - 1
+      send({
+        type: KEYBOARD_EVENTS.ARROW_UP,
       })
     }
   })
 
-  useKeyPress('downarrow', () => {
+  useKeyPress(KEYBOARD_EVENTS.ARROW_DOWN, () => {
     if (state.value === 'idle') {
-      setActiveItem((prev) => {
-        if (prev === null) return 0
-        return prev === state.context.todos.length - 1 ? prev : prev + 1
+      send({
+        type: KEYBOARD_EVENTS.ARROW_DOWN,
       })
     }
   })
+
+  const onTitleChange = (value: string) => {
+    send({
+      type: KEYBOARD_EVENTS.LETTER_INPUT,
+      value
+    })
+  }
 
   return (
     <div className="App">
@@ -55,21 +65,20 @@ function App() {
         <Select
           value={categoryValue}
           options={DUMMY_CATEGORIES}
-          onChange={setCategoryValue}
         />
         <div
           ref={inputRef}
         >
           <Input
+            id="titleValue"
             value={titleValue}
-            onChange={setTitleValue}
-            selectCategory={setCategoryValue}
+            onChange={onTitleChange}
           />
         </div>
         <div ref={listItemRef} className="w-[280px] mx-auto">
           <List
             activeItem={activeItem}
-            setActiveItem={setActiveItem}
+            setActiveItem={handleSetActiveItem}
           />
         </div>
       </section>

@@ -14,7 +14,7 @@ const ListItem = ({listItem, active, setActiveItem, index} : { listItem : ListIt
         >
             <input type="checkbox" />
             <div className='ml-[10px] flex flex-col justify-start'>
-                <div className={`text-[12px] ${ !active ? 'text-[#606060]' : 'text-white font-semibold'}`}>
+                <div className={`text-[12px] text-left ${ !active ? 'text-[#606060]' : 'text-white font-semibold'}`}>
                     {listItem.name}
                 </div>
                 <div className={`text-[10px] flex items-center justify-start`}>
@@ -39,12 +39,11 @@ const List = ({
 }: { activeItem: number | null, setActiveItem: Function}) => {
     const sessionServices = useContext(SessionContext)
     const [state] = useActor(sessionServices.sessionService)
-    // console.log(state)
     return (
         <section className='w-[280px] mt-[32px] mx-auto'>
             {
                 state.context.todos.map((item, idx) => (
-                    <ListItem index={idx} listItem={item} active={idx === activeItem} setActiveItem={setActiveItem} key={idx}/>
+                    <ListItem index={idx} listItem={item} active={idx === activeItem} setActiveItem={(setActiveItem)} key={idx}/>
                 ))
             }
         </section>

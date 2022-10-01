@@ -8,7 +8,6 @@ import useOnClickOutside from "../../helpers/onClickOutside"
 type SelectProps = {
     value: string | null,
     options: any[],
-    onChange: (value: string) => void,
 }
 
 const renderOption = (option: Category) => {
@@ -30,7 +29,6 @@ const renderOption = (option: Category) => {
 const Select = ({
     value,
     options,
-    onChange,
 } : SelectProps) => {
     const sessionServices = useContext(SessionContext)
     const [state, send] = useActor(sessionServices.sessionService)
@@ -42,7 +40,6 @@ const Select = ({
     }
 
     const onSelectCategory = (option: Category) => {
-        onChange(option.id) 
         send({
             type: 'TYPING_TITLE',
             value: option
