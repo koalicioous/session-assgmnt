@@ -99,6 +99,10 @@ const SessionMachine = createMachine({
                     target: 'idle',
                     actions: 'insertData',
                 },
+                'SELECT_CATEGORY': {
+                    target: 'typingTitle',
+                    actions: 'setSelectedCategory',
+                },
                 [KEYBOARD_EVENTS.LETTER_INPUT]: {
                     target: 'typingCategory',
                     actions: 'setTitleValue',
@@ -170,6 +174,15 @@ const SessionMachine = createMachine({
                 category: event.value,
                 selectedIndex: null,
                 tempSelectedSuggestion: null,
+            }
+        }),
+        'setSelectedCategory': assign((ctx,event:any) => {
+            return {
+                categoryValue: event.value.category.id,
+                category: event.value.category,
+                titleValue: ctx.titleValue.split('@')[0],
+                tempSelectedSuggestion: null,
+                selectedIndex: null,
             }
         }),
         'setActivity': assign((ctx, event: any) => {

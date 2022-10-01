@@ -22,8 +22,6 @@ function App() {
   const inputRef = React.useRef(null)
 
   const { titleValue, categoryValue, activeItem } = state.context
-  console.log(categoryValue)
-
   const handleSetActiveItem = (index: number | null) => {
     send({
       type:'SET_ACTIVE_ITEM',

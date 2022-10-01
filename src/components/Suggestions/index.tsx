@@ -95,9 +95,8 @@ const Suggestions = ({
             // immidiate insert
             if (state.context.tempSelectedSuggestion) {
                 send({
-                    type: 'INSERT_DATA',
+                    type: 'SELECT_CATEGORY',
                     value: {
-                        name: state.context.activity,
                         category: state.context.tempSelectedSuggestion,
                     }
                 })

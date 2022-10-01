@@ -48,7 +48,7 @@ const Input = ({
     const containerRef = useRef<HTMLDivElement>(null)
 
     const { title, category } = parseInput(value)
-    const { tempSelectedSuggestion } = state.context
+    const { tempSelectedSuggestion, titleValue } = state.context
 
     const handleSelectActivity = (option: { id: string, name: string}) => {
         onChange(option.name)
@@ -64,13 +64,11 @@ const Input = ({
                 inputRef.current.blur()
             }
             send({
-                type: 'INSERT_DATA',
+                type: 'SELECT_CATEGORY',
                 value: {
-                    name: title,
-                    category: option,
+                    category: state.context.tempSelectedSuggestion,
                 }
             })
-            onChange('')
         }
     }
 
@@ -117,7 +115,7 @@ const Input = ({
         >
             <input
                 ref={inputRef}
-                value={value}
+                value={titleValue}
                 onChange={e => onChange(e.target.value)}
                 placeholder={`What's your focus?`}
                 className='p-4 w-[280px] text-[12px] px-[18px] py-[12px] rounded-1'
